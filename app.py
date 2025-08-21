@@ -34,10 +34,8 @@ def geocode(name, retries=3, delay=0.8):
             g = geocoder.arcgis(query)
             if g and g.ok and g.latlng:
                 lat, lng = g.latlng
-                # Basic sanity check around Bengaluru bounds
                 if 12.5 <= lat <= 13.3 and 77.2 <= lng <= 77.9:
                     return float(lat), float(lng)
-                # If outside bounds, still return but mark as is
                 return float(lat), float(lng)
         except Exception:
             pass
@@ -47,7 +45,6 @@ def geocode(name, retries=3, delay=0.8):
 def build_map():
     """Create a Folium map with markers for neighborhoods (where geocoding succeeds)."""
     neighborhoods = scrape_neighborhoods()
-    # Center map on Bengaluru
     m = folium.Map(location=[12.9716, 77.5946], zoom_start=12, control_scale=True)
     count = 0
     for name in neighborhoods:
@@ -58,7 +55,6 @@ def build_map():
                 popup=name,
             ).add_to(m)
             count += 1
-        # limit excessive geocoding if many entries (avoid slow first loads on free tiers)
         if count >= 50:
             break
     return m
@@ -66,7 +62,6 @@ def build_map():
 @app.route("/")
 def home():
     m = build_map()
-    # Return the Folium map HTML directly
     return m._repr_html_()
 
 @app.route("/api/neighborhoods")
@@ -83,7 +78,3 @@ def api_neighborhoods():
 @app.route("/health")
 def health():
     return jsonify({"status": "ok"})
-
-if __name__ == "__main__":
-    # For local testing; Render will use gunicorn via Procfile
-    app.run(host="0.0.0.0", port=5000, debug=False)
